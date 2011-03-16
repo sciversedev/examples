@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  <ModulePrefs title="MySimpleSearch" author_email="developer@elsevier.com" description="To demonstrate the SciVerse application platform and the SciVerse APIs, we explain a simple search application called MySimpleSearch, which searches ScienceDirect for articles containing a certain search term entered by the user.">
+    <Require feature="opensocial-0.9" />
+    <Require feature="sciverse" />
+    <Require feature="hub" />
+	<Require feature="org.jquery.core-1.4.2" />
+  </ModulePrefs>
+  <Content type="html" view="canvas"><![CDATA[
+
+<!-- The code for Canvas view is here. -->
+<div>Canvas view for MySimpleSearch.</div>
+
+  ]]></Content>
+  <Content type="html" view="profile"><![CDATA[
+
+<script type="text/javascript" >
+
+var myapikey = "your api key here"; 
+var authtoken;
+var requestHeaders = {};
+    
+var context;
+var numberOfSearchResultsToReturn = 2;
+var articlesDOIs;
+var output;
+var error;
+
+/**
+ * The init() function initialized fields in the gadget. In this case, the context object
+ * is retrieved and from the context, the search terms are found to populate the gadget
+ * search control.
+ */
+function init(){
+	// the getContextInfo is a framework API call that returns the ContextInfo object. 
+	// @see http://developer.sciverse.com/framework#context
+	gadgets.sciverse.getContextInfo(initCallback);
+}
+
+function initCallback(initResponse){
+	context = initResponse;
+	
+	var searchterms = context.searchTerms;// => fruitfly
+	//var searchQuery = context.searchQuery;// => ALL(fruitfly)
+	document.getElementById('searchterms').value = searchterms;
+	
+	// get authtoken from context object for content API call
+	authtoken = context.secureAuthtoken;	
+	
+	requestHeaders['X-ELS-APIKey'] = myapikey;
+    requestHeaders['X-ELS-Authtoken'] = authtoken;	
+}
+
+/**
+ * From the gadget the user does a new search in ScienceDirect (SD) to retrieve the articles 
+ * with the search terms in the gadget search control. The list of DOIs from the 
+ * SD articles found, can be used to retrieve Scopus information for the articles' authors.
+ */
+function search(){
+	// clear possible results from previous search
+	document.getElementById('content_div').innerHTML = "";
+	
+	// clean 
+	output = "";
+	error="";
+	makeSciDirCall();
+	
+	document.getElementById('content_div').innerHTML = output;
+}
+
+/**
+ * 
+ */
+function makeSciDirCall(){  
+    var SDSearchString = document.getElementById('searchterms').value;
+    SDSearchString = encodeURIComponent(SDSearchString);
+       
+    var view = "COMPLETE";
+    var url = "http://api.elsevier.com/content/search/index:SCIDIR"+"?query=" + SDSearchString + "&count="+
+    	numberOfSearchResultsToReturn+"&view="+view;
+
+    bkapiMakeRequest(url, sciDirCallback1, requestHeaders); 
+   
+}
+
+function sciDirCallback1(sciDirResponse){
+		
+    if(sciDirResponse == null){
+    	var display = "<b><font color='red'>SCIDIR Response object == null</font></b>"
+        document.getElementById('content_div').innerHTML = display;
+        return;
+    }  
+    
+    if(sciDirResponse.errors != null && sciDirResponse.errors.length>0){
+    	var display = "<b><font color='red'>SCIDIR Error: "+sciDirResponse.errors[0]+" "+sciDirResponse.text+"</font></b>"
+        document.getElementById('content_div').innerHTML = display;
+        return;
+    }
+    
+    var textJson = gadgets.json.parse(sciDirResponse.text);
+    if(!textJson){
+        var display = "<b><font color='red'>parsing results returned nothing</font></b>"
+        document.getElementById('content_div').innerHTML = display;
+        return;
+    }
+          
+  	var entries = textJson['search-results']['entry'];
+    numberOfEntries = entries.length;
+    output = output + "<h3>number of entries found: " + numberOfEntries + "</h3>";
+    var authors = new Array(numberOfEntries);
+    articlesDOIs = new Array(numberOfEntries);
+    
+    $.each(entries, function(i1, entry){
+    	var title = entry['dc:title'];
+    	authors = entry['authors'];
+    	articlesDOIs[i1] = entry['prism:doi'];// 
+    	output = output + (i1+1) + ". " + title + " (by: "+authors+"[doi:"+articlesDOIs[i1]+"])<br>";
+    });
+}
+
+function bkapiMakeRequest(url, callback, requestHeaders) { 
+    var params = {};
+    params[gadgets.io.RequestParameters.HEADERS] = requestHeaders;
+    gadgets.sciverse.makeRequest(url, callback, params);
+};
+
+// @see http://wiki.opensocial.org/index.php?title=Gadgets.util_%28v0.9%29#gadgets.util.registerOnLoadHandler   
+gadgets.util.registerOnLoadHandler(init);
+
+</script>
+
+<div>Profile view for MySimpleSearch.</div>
+<input type="text" name="searchterm" id="searchterms" /><input type="submit" value="search" onclick="javascript:search();" />
+<div id="content_div" style="font-size: 10;"></div>
+
+
+  ]]></Content>
+  <Content type="html" view="sciverseResultsView"><![CDATA[
+
+<!-- The code for Sciverse Results View view is here. -->
+<div>Sciverse Results View view for MySimpleSearch.</div>
+
+  ]]></Content>
+</Module>
