@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+  <ModulePrefs description="Sample gadget demonstrating how to share javascript code between views">
+    <Require feature="sciverse" />
+  </ModulePrefs>
+  <Content type="html" view="canvas,profile"><![CDATA[
+  ]]></Content>
+  <Content type="html" view="profile"><![CDATA[
+	<script type="text/javascript">
+		function getContextInfo() {
+			gadgets.sciverse.getContextInfo(displayContextInfo);				
+		}			
+		function displayContextInfo(obj){
+			var html;
+		    for (var prop in obj) {
+			    html += "<div><span id=propName>" + prop + "</span>=<span id=propVal>" + obj[prop] + "</span></div>";
+			}		
+			document.getElementById('contextInfo').innerHTML = html;	
+		}
+	</script>
+ 	<div id="pgTitle">Welcome to <strong>profile</strong> view!!!<div>	
+	<p><a href="javascript:void(0);" onclick="getContextInfo();">Get Context Info</a></p>
+	<div id="contextInfo" style="display:block">
+	</div>
+  ]]></Content>
+  <Content type="html" view="canvas"><![CDATA[
+	<script type="text/javascript">
+		function getContextInfo() {
+			gadgets.sciverse.getContextInfo(displayContextInfo);				
+		}			
+		function displayContextInfo(obj){
+			var html;
+		    for (var prop in obj) {
+			    html += "<div><span id=propName>" + prop + "</span>=<span id=propVal>" + obj[prop] + "</span></div>";
+			}		
+			document.getElementById('contextInfo').innerHTML = html;	
+		}
+	</script>
+ 	<div id="pgTitle">Welcome to <strong>canvas</strong> view!!!<div>
+	<p><a href="javascript:void(0);" onclick="getContextInfo();">Get Context Info</a></p>
+	<div id="contextInfo" style="display:block"
+	</div>
+  ]]></Content>
+</Module>
