@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+    <ModulePrefs
+            title="Simple SciVerse Search"
+            author="sciversedev"
+            author_email="developer@elsevier.com">
+        <Require feature="sciverse" />
+        <Require feature="org.jquery.core-1.4.2" />
+    </ModulePrefs>
+    <UserPref name="contentApiKey" datatype="hidden" default_value="your-api-key-here" />
+    <UserPref name="secureAuthtoken" datatype="hidden" />
+    <Content type="html" view="profile, canvas, sciverseResultsView, hover"><![CDATA[<script type="text/javascript" src="https://raw.github.com/sciversedev/lib/master/simple-sciverse-search.js"></script>]]></Content>
+    <Content type="html" view="profile"><![CDATA[<div id="output">Hello World!</div><br>
+
+<script type="text/javascript">
+var myclient;
+
+function getcontext() {
+	gadgets.sciverse.getContextInfo(init);
+}
+
+function init(context){
+	var divid = "output";
+	document.getElementById(divid).innerHTML = "";
+	
+	var searchterms = context.searchTerms;
+	
+	myclient = new ContentApiClient();
+	myclient.setSearchCluster("SCIDIR");
+	myclient.setView("COMPLETE");
+	myclient.setResultCount(5);
+	myclient.setSearchCompleteCallback(contentApiCallback);
+	myclient.setDivId(divid);
+	myclient.execute(searchterms);
+}
+
+gadgets.util.registerOnLoadHandler(getcontext);
+</script>]]></Content>
+</Module>
