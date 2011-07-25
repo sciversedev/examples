@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+    <ModulePrefs
+            title="Results List Application"
+            author="Judson Dunham"
+            author_email="developer@elsevier.com"
+            description="This application is a demonstration of a basic results list integration. It uses startMeInvisible to make the toolbar profile view invisible, and uses the sciverseResultsView to display the document title and link under the results.">
+        <Require feature="opensocial-0.9" />
+        <Require feature="views" />
+        <Require feature="dynamic-height" />
+        <Require feature="sciverse" />
+    </ModulePrefs>
+    <UserPref name="startMeInvisible" datatype="hidden" default_value="y" />
+    <Content type="html" view="profile"><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+	
+	<script type="text/javascript">
+	
+	//get results
+	gadgets.sciverse.getAllResults(getResultsCallback);
+			
+	function getResultsCallback(resultsDocs){
+			
+		//cycle through docs, get title and link. 
+		//Here you could get any contextual data you require, consult the 
+		//framework documentation to see what each item is called in the json
+		
+		for(var doc in resultsDocs){
+		
+		var docTitle = resultsDocs[doc].itemTitle;
+		
+		//Some data needs massaging. 
+		//For example, need to strip out <key> tags Hub puts in the 
+		//doc title to indicate user search terms!
+		var myRegExp = new RegExp("/","g");
+		docTitle = docTitle.replace(myRegExp, ""); 
+		docTitle = docTitle.replace(/<key>/gi, "");
+		
+		//Not all data have predictable labels. This is the URL: 
+		var docLink = resultsDocs[doc].txt10;
+		
+		//Some data may need to be modified to be useful.
+		//For example, the DOI data needs a prefix to become
+		//a working link.
+		var docDOI = resultsDocs[doc].doi;
+		docDOI = "http://dx.doi.org/" + docDOI;
+		
+		//Now make json object to send to the sciverseResultsView
+		var docData = { "title":docTitle, 
+						"doi":docDOI,
+						"URL":docLink };
+		
+		//Fix offset - framework API numbers the result items differently than Hub!
+		var offset = 1;
+		var resultItem = parseInt(doc) + offset;
+		
+		//Show results view
+		gadgets.sciverse.invokeResultsView(resultItem, docData);
+		}			
+	}
+	</script>]]></Content>
+    <Content type="html" view="sciverseResultsView"><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+	
+	<style type="text/css">
+	div{font-size:12px;font-family:arial,verdana,helvetica,sans-serif;margin-top: -5px;margin-left: -8px; border: 1px solid orange; padding: 8px;}
+	a{color:blue;text-decoration:none;}
+	a:visited{color:purple;text-decoration:none;}
+	a:hover{color:red;text-decoration:underline;}
+	</style>
+	
+	<script type="text/javascript">
+
+	//Get data sent from profile view
+	var data = gadgets.views.getParams();
+
+	var docLink
+	
+	//Get DOI or URL and set docLink variable
+	if (data.doi == "") {
+		docLink = data.URL;
+		
+		} else {
+		docLink = data.doi;
+	}
+	
+	//Create display string
+	var displayString = '<div><b>Document link: </b><a href="' + docLink + '">' + data.title + '</a></div>';
+	
+	//Display it
+	document.write(displayString);
+	
+	//Resize sciVerseResults view, requires dynamic-height
+	gadgets.window.adjustHeight();
+	
+	</script>]]></Content>
+</Module>
